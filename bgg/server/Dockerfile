@@ -1,12 +1,14 @@
-FROM node:latest
+FROM node:16
 
-ENV APP_PORT=3000 APP_DIR=/app  \
-	BGG_DB_HOST='127.0.0.1' BGG_DB_PORT=3306 \
-	BGG_DB_USER=root BGG_DB_PASSWORD=changeit
+ENV APP_ROOT=/app APP_PORT=3000 BGG_DB_HOST=localhost BGG_DB_PORT=3000 BGG_DB_USER=root BGG_DB_PASSWORD=mypassword
 
-WORKDIR ${APP_DIR}
+# create the /app dir and cd into /app
+WORKDIR ${APP_ROOT}
 
+# we are now inside APP_ROOT
+# copy the following files and directories. "." represents current directory
 ADD main.js .
+ADD package-lock.json .
 ADD package.json .
 
 ADD bootstrap_public bootstrap_public
@@ -15,13 +17,15 @@ ADD lib lib
 ADD public public
 ADD views views
 
+# install the packages in package.json
 RUN npm install
+RUN npm i
 
-HEALTHCHECK --interval=60s --start-period=60s \
-	CMD curl -f http://localhost:${APP_PORT}/health || exit 1
+# run the application
+ENTRYPOINT [ "node", "main.js" ]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    cmd curl -s -f http://localhost:${APP_PORT}/health || exit 1
 
 EXPOSE ${APP_PORT}
 
-ENTRYPOINT [ "node", "main.js" ]
-
-CMD [ "--html" ]
+ENTRYPOINT ["node", "main.js"]
