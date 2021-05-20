@@ -21,11 +21,10 @@ ADD views views
 RUN npm install
 RUN npm i
 
-# run the application
-ENTRYPOINT [ "node", "main.js" ]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     cmd curl -s -f http://localhost:${APP_PORT}/health || exit 1
 
 EXPOSE ${APP_PORT}
 
+# run the application
 ENTRYPOINT ["node", "main.js"]
