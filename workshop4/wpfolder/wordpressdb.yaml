@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpressdb-pvc
+  labels:
+    app: wordpressdb
+    name: wordpressdb-pvc
+
+spec:
+  storageClassName: do-block-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpressdb-deploy
+  labels:
+    app: wordpressdb
+    name: wordpressdb-deploy
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: wordpressdb-pod
+  template:
+    metadata:
+      name: wordpressdb-pod
+      labels: 
+        app: wordpressdb
+        name: wordpressdb-pod
+    spec:
+      volumes:
+      - name: wordpressdb-vol
+        persistentVolumeClaim:
+          claimName: wordpressdb-pvc
+      # house keeping - run before container, sequential, must complete before containers will run
+      # if fail, the pod will fail
+      # initContainers:
+      # - name: scrub-init-container
+      #   image: busybox
+      #   imagePullPolicy: IfNotPresent
+      #   command: ["/bin/sh", "-c", "test -e /scrub && rm -rf /scrub/..?* /scrub/.[!.]* /scrub/*  && test -z \"$(ls -A /scrub)\" || exit 1"]
+      #   volumeMounts:
+      #   - name: bggdb-vol
+      #     mountPath: /scrub
+
+      containers:
+      - name: wordpressdb-container
+        image: chukmunnlee/bggdb:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: wdb-port
+          containerPort: 3306
+        volumeMounts:
+        - name: wordpressdb-vol
+          mountPath: /var/lib/mysql
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpressdb-svc
+  labels:
+    app: wordpressdb
+    name: wordpressdb-svc
+
+spec:
+  type: ClusterIP
+  selector: 
+    name: wordpressdb-pod
+  ports:
+  - port: 3306
+    targetPort: wdb-port
+

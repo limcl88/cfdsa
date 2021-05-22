@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deploy
+  labels:
+    name: wordpress-deploy
+
+spec:
+  selector:
+    matchLabels:
+      name: wordpress-pod
+  template:
+    metadata:
+      name: wordpress-pod
+      labels:
+        name: wordpress-pod
+    spec:
+      containers:
+      - name: wordpress-container
+        image: wordpress:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8085
+      
+        envFrom:
+          - configMapRef:
+              name: wordpress-cm
+          - secretRef:
+              name: wordpress-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: wordpress-svc
+   labels:
+      name: wordpress-svc
+spec:
+   type: ClusterIP
+   selector:
+      name: wordpress-pod
+   ports:
+   - port: 80
+     targetPort: 3306
+
+
+
+
+

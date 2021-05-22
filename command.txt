@@ -32,15 +32,10 @@ docker run -d -p 3306:3306 bggdb --network mynet -v myvol:/var/lib/mysql lcl1/my
 #day 2
 
 kebectl cluster-info
-
 set KUBECONFIG="C:\Users\lcl88\Downloads\k8s-1-20-2-do-0-sgp1-1621388990097-kubeconfig.yaml"
-
 kubectl get nodes
-
 kubectl get all -n kube-system
-
 kubectl get nodes -o wide
-
 kubectl cluster-info dump
 
 kubectl create namespace myns
@@ -48,7 +43,6 @@ kubectl get ns
 kubectl describe ns/myns
 kubectl delete ns/myns
 
-kubectl apply -f fortune.yaml 
 kubectl apply -f fortune.yaml -n myns
 kubectl get po -n default
 kubectl describe po/fortune-pod
@@ -57,16 +51,27 @@ kubectl exec -ti po/fortune-pod -n myns -- bash
 
 kubectl port-forward po/fortune-pod 8081:3000
 
-kubectl delete -f fortune.yaml -n myns
-
 kubectl get rs/fortune-deploy-7f87ffddff -n myns
 
 kubectl scale deploy/fortune-deploy --replicas=1 -n myns
 kubectl get all -n myns
 
-# to check ns resource limits (by default - unlimited
-kubectl describe ns/myns 
+
+kubectl run myshell --image=alpine -l app=myshell -ti --restart=Never -n fns --rm -- ash
+
+# to check ns resource limits (by default - unlimited)
 
 kubectl describe svc/fortune-svc -n myns
 
 kubectl get all,cm,secret -n myns
+
+kubectl rollout undo deploy/bggapp-deploy -n myns
+
+# day 03
+helm template my-ingress ingress-nginx/ingress-nginx -n nginx-ingress > ingress.yaml
+
+# check server (metic server) utilization (CPU, memories)
+kubectl top nodes
+kubectl top po -n fns
+
+
